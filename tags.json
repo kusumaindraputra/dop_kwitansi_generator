@@ -1,0 +1,51 @@
+{
+    "sub_unit": {
+        "nama": "",
+        "kode": ""
+    },
+    "program": "",
+    "kegiatan": {
+        "nama": "",
+        "kode": ""
+    },
+    "sub_kegiatan": {
+        "nama": "",
+        "kode": "",
+        "kode_kegiatan": ""
+    },
+    "kode_rekening": "",
+    "perjalanan": {
+        "nama": "",
+        "tempat": "",
+        "tgl_mulai": "",
+        "tgl_selesai": ""
+    },
+    "billing": {
+        "pegawai": {
+            "nama": "",
+            "nip": ""
+        },
+        "harian_nom": "",
+        "harian_vol": "",
+        "harian_total_nom": "",
+        "harian_total_terbilang": "",
+        "transport_vol": "",
+        "transport_nom": "",
+        "transport_total_nom": "",
+        "transport_total_terbilang": "",
+        "total_nom": "",
+        "total_terbilang": ""
+    },
+    "validasi": {
+        "tanggal": "",
+        "pptk": {
+            "nama": "",
+            "nip": ""
+        },
+        "bd": {
+            "nama": "",
+            "nip": "",
+            "jabatan": ""
+        }
+    }
+}
