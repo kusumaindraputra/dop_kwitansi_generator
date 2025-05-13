@@ -1,5 +1,11 @@
 function formatNumber(num) {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (!num) return "";
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Fungsi untuk menghilangkan thousand separator (titik)
+function unformatNumber(str) {
+  return str.replace(/\./g, "");
 }
 
 function toTerbilang(nilai) {
@@ -141,6 +147,9 @@ function formToJSON(form) {
     if (result.perjalanan.tgl_selesai) {
       result.perjalanan.tgl_selesai = formatTanggalIndonesia(result.perjalanan.tgl_selesai);
     }
+    if (result.validasi && result.validasi.tanggal) {
+      result.validasi.tanggal = formatTanggalIndonesia(result.validasi.tanggal);
+    }
   }
   // Contoh lain jika ada field tanggal di level lain:
   // if (result.surat_dinas && result.surat_dinas.tanggal_surat) {
@@ -155,8 +164,8 @@ function formToJSON(form) {
   if (result.billing && Array.isArray(result.billing)) {
     result.billing.forEach(item => {
       if (item && typeof item === 'object') { // Pastikan item adalah objek yang valid
-        const nom = parseInt((item.harian_nom || "0").replace(/,/g, ""), 10);
-        const vol = parseInt((item.harian_vol || "0"), 10);
+        const nom = parseInt(unformatNumber(item.harian_nom || "0"), 10);
+        const vol = parseInt(item.harian_vol || "0", 10);
         item.harian_total = nom * vol;
         item.harian_nom_display = formatNumber(nom);
         item.harian_total_display = formatNumber(item.harian_total);
@@ -168,8 +177,8 @@ function formToJSON(form) {
 
   // Kalkulasi untuk transportasi (jika ada)
   if (result.transport && typeof result.transport === 'object' && result.transport.nom) {
-    const nom = parseInt((result.transport.nom || "0").replace(/,/g, ""), 10);
-    const vol = parseInt((result.transport.vol || "1"), 10); // Asumsi vol=1 jika tidak ada
+    const nom = parseInt(unformatNumber(result.transport.nom || "0"), 10);
+    const vol = parseInt(result.transport.vol || "1", 10);
     result.transport.total = nom * vol;
     result.transport.nom_display = formatNumber(nom);
     result.transport.total_display = formatNumber(result.transport.total);
