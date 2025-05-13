@@ -5,25 +5,71 @@ function formatNumber(num) {
 function toTerbilang(nilai) {
   const angka = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan"];
   const satuan = ["", "Ribu", "Juta", "Miliar", "Triliun"];
+
   if (nilai == 0) return "Nol Rupiah";
-  let str = nilai.toString(), res = "", pos = 0;
-  while (str.length > 0) {
-    let tiga = parseInt(str.slice(-3));
-    str = str.slice(0, -3);
-    if (tiga) {
-      let r = Math.floor(tiga / 100);
-      let p = Math.floor((tiga % 100) / 10);
-      let s = tiga % 10;
-      let seg = "";
-      if (r) seg += angka[r] + " Ratus ";
-      if (p > 1) seg += angka[p] + " Puluh " + angka[s] + " ";
-      else if (p == 1) seg += s == 0 ? "Sepuluh " : s == 1 ? "Sebelas " : angka[s] + " Belas ";
-      else if (s) seg += angka[s] + " ";
-      res = seg + satuan[pos] + " " + res;
+  // Anda bisa menambahkan penanganan untuk angka negatif jika diperlukan, contoh:
+  // if (nilai < 0) return "Minus " + toTerbilang(Math.abs(nilai)).replace(" Rupiah", "") + " Rupiah";
+
+  let strNilai = nilai.toString();
+  let hasilAkhir = "";
+  let posisiSatuan = 0; // 0 untuk satuan dasar, 1 untuk ribuan, 2 untuk jutaan, dst.
+
+  while (strNilai.length > 0) {
+    let grupTigaDigit = parseInt(strNilai.slice(-3)); // Ambil 3 digit terakhir
+    strNilai = strNilai.slice(0, -3);    // Sisa string setelah diambil 3 digit
+
+    if (grupTigaDigit > 0) {
+      let segmenTeks = "";
+      let ratusan = Math.floor(grupTigaDigit / 100);
+      let sisaSetelahRatusan = grupTigaDigit % 100;
+      let puluhan = Math.floor(sisaSetelahRatusan / 10);
+      let satuanDigit = sisaSetelahRatusan % 10;
+
+      // Konversi Ratusan
+      if (ratusan > 0) {
+        if (ratusan === 1) {
+          segmenTeks += "Seratus "; // Mengubah "Satu Ratus" menjadi "Seratus"
+        } else {
+          segmenTeks += angka[ratusan] + " Ratus ";
+        }
+      }
+
+      // Konversi Puluhan dan Satuan
+      if (puluhan > 1) { // Untuk 20-99
+        segmenTeks += angka[puluhan] + " Puluh ";
+        if (satuanDigit > 0) {
+          segmenTeks += angka[satuanDigit] + " ";
+        }
+      } else if (puluhan === 1) { // Untuk 10-19
+        if (satuanDigit === 0) {
+          segmenTeks += "Sepuluh "; // "Satu Puluh" menjadi "Sepuluh"
+        } else if (satuanDigit === 1) {
+          segmenTeks += "Sebelas "; // Tetap "Sebelas"
+        } else {
+          segmenTeks += angka[satuanDigit] + " Belas ";
+        }
+      } else { // Untuk 0-9 (ketika puluhan adalah 0)
+        if (satuanDigit > 0) {
+          segmenTeks += angka[satuanDigit] + " ";
+        }
+      }
+      
+      segmenTeks = segmenTeks.trim(); // Menghilangkan spasi berlebih di akhir segmen
+
+      if (segmenTeks !== "") {
+        let namaSatuan = satuan[posisiSatuan];
+        // Mengubah "Satu Ribu" menjadi "Seribu"
+        if (segmenTeks === "Satu" && namaSatuan === "Ribu") {
+          hasilAkhir = "Seribu " + hasilAkhir;
+        } else {
+          hasilAkhir = segmenTeks + (namaSatuan ? " " + namaSatuan : "") + " " + hasilAkhir;
+        }
+      }
     }
-    pos++;
+    posisiSatuan++;
   }
-  return res.trim() + " Rupiah";
+  // Membersihkan spasi ganda dan spasi di awal/akhir, lalu menambahkan "Rupiah"
+  return hasilAkhir.trim().replace(/\s+/g, ' ') + " Rupiah";
 }
 
 function formatTanggalIndonesia(dateString) {
@@ -180,23 +226,52 @@ document.getElementById("dopForm").addEventListener("submit", async function (e)
   // Jika Anda menggunakan modal untuk previewJson, Anda mungkin perlu menampilkannya secara programatik di sini
   // contoh: new bootstrap.Modal(document.getElementById('idModalPreview')).show();
 
-  const res = await fetch("template/template.docx");
-  const blob = await res.blob();
+  // Ambil file template dari input
+  const templateFileInput = document.getElementById("templateFile");
+  if (!templateFileInput || !templateFileInput.files || templateFileInput.files.length === 0) {
+    alert("Silakan pilih file template DOCX terlebih dahulu.");
+    return; // Hentikan eksekusi jika tidak ada file template yang dipilih
+  }
+  const templateFile = templateFileInput.files[0];
+
   const reader = new FileReader();
 
-  reader.onload = function () {
-    const zip = new PizZip(reader.result);
-    const doc = new window.docxtemplater().loadZip(zip);
-    doc.setData(jsonDataForDocx);
+  reader.onload = function (event) {
     try {
-      doc.render();
-    } catch (error) {
-      alert("Template error: " + error.message);
-      return;
+      const content = event.target.result; // Ini akan menjadi ArrayBuffer
+      const zip = new PizZip(content);
+      const doc = new window.docxtemplater().loadZip(zip);
+      doc.setData(jsonDataForDocx);
+
+      try {
+        doc.render();
+      } catch (error) {
+        console.error("Docxtemplater render error: ", error);
+        if (error.properties && error.properties.errors) {
+            error.properties.errors.forEach(err => {
+                console.error("Template Error Detail:", err.stack || err.message || err);
+            });
+        }
+        alert("Terjadi kesalahan saat memproses template: " + error.message + "\nLihat konsol untuk detail.");
+        return;
+      }
+
+      const out = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      saveAs(out, "kwitansi_dinas.docx");
+    } catch (e) {
+      console.error("Error processing template file: ", e);
+      alert("Gagal memproses file template: " + e.message);
     }
-    const out = doc.getZip().generate({ type: "blob" });
-    saveAs(out, "kwitansi_dinas.docx");
   };
 
-  reader.readAsBinaryString(blob);
+  reader.onerror = function (event) {
+    console.error("File reading error: ", event.target.error);
+    alert("Gagal membaca file template.");
+  };
+
+  // Baca file template sebagai ArrayBuffer
+  reader.readAsArrayBuffer(templateFile);
 });

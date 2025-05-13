@@ -49,6 +49,14 @@
               <label class="form-label">Kode Rekening</label>
               <input type="text" class="form-control" name="kode_rekening" required />
             </div>
+            <div class="col-md-6">
+              <label class="form-label">Nama Kegiatan</label>
+              <input type="text" class="form-control" name="kegiatan.nama" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kode Kegiatan</label>
+              <input type="text" class="form-control" name="kegiatan.kode" required />
+            </div>
           </div>
         </div>
       </div>
@@ -94,6 +102,19 @@
           </div>
         </div>
       </div>
+
+      <!-- Input Template File -->
+      <div class="card mb-4">
+        <div class="card-header bg-dark text-white">Pilih Template Dokumen</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="templateFile" class="form-label">File Template (.docx):</label>
+            <input class="form-control" type="file" id="templateFile" accept=".docx" required>
+            <div class="form-text">Pilih file template kwitansi (format .docx) yang akan digunakan.</div>
+          </div>
+        </div>
+      </div>
+
 
       <!-- Tombol -->
       <div class="text-center mb-5">
